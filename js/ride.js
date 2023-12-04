@@ -17,8 +17,6 @@ let map;
         window.location.href = '/signin.html';
     });
 
-    //  requestUnicorn
-    //      make the POST request to the server
     function requestUnicorn(pickupLocation) {
         $.ajax({
             method: 'POST',
@@ -42,8 +40,6 @@ let map;
         });
     }
 
-    //  completeRequest
-    //      a Unicorn has been dispatched to your location
     function completeRequest(result, pickupLocation) {
         var unicorn;
         var pronoun;
@@ -53,9 +49,8 @@ let map;
         pronoun = unicorn.Gender === 'Male' ? 'his' : 'her';
         displayUpdate(unicorn.Name + ', your ' + unicorn.Color + ' unicorn, is on ' + pronoun + ' way.', unicorn.Color);
 
-        console.log(pickupLocation);
-        //  get the local weather, find nearby restaurants, movies
-        // getWeather(pickupLocation, unicorn)
+        // Fetch weather information based on the pickup location
+        getWeather(pickupLocation, unicorn);
 
         animateArrival(function animateCallback() {
             displayUpdate(unicorn.Name + ' has arrived. Giddy up!', unicorn.Color);
@@ -65,6 +60,44 @@ let map;
             $('#request').text('Set Pickup');
         });
     }
+
+    // Function to get weather information from OpenWeatherMap API
+    function getWeather(location, unicorn) {
+        var apiKey = 'ff503acb6735952b9f433607b449f142'; // Replace with your actual API key
+        var apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${location.latitude}&lon=${location.longitude}&appid=${apiKey}`;
+
+        $.ajax({
+            method: 'GET',
+            url: apiUrl,
+            success: function (weatherData) {
+                displayWeatherInfo(weatherData, unicorn);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.error('Error fetching weather: ', textStatus, ', Details: ', errorThrown);
+                console.error('Response: ', jqXHR.responseText);
+            }
+        });
+    }
+
+    // Function to display weather information in the UI
+    function displayWeatherInfo(weatherData, unicorn) {
+        var weatherDescription = weatherData.weather[0].description;
+        var temperatureKelvin = weatherData.main.temp;
+        var temperatureFahrenheit = toFahrenheit(temperatureKelvin);
+
+        var cityName = weatherData.name;
+
+        var weatherMessage = `Current weather in ${cityName}: ${weatherDescription}. Temperature: ${temperatureFahrenheit.toFixed(2)}°F.`;
+        displayUpdate(weatherMessage, 'blue');
+    }
+
+    // Function to convert Kelvin to Fahrenheit
+    function toFahrenheit(celsius) {
+        return (((celsius - 273.15) * (9/5)) + 32);
+    }
+
+
+
 
     // Register click handler for #request button
     $(function onDocReady() {
